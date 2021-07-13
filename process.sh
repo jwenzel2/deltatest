@@ -20,5 +20,7 @@ do
     then
         kill $id
         echo "killing pid: "$id
+        echo "here are the currently running processes as of now"
+        ps -U $me -u $me u
     fi
 done
