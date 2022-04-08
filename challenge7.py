@@ -60,5 +60,25 @@ for index in range(len(targetDir)):
         file_out.write(ciphered_bytes)
         buffer = input_file.read(buffer_size)
     file_out.close()
-
+    input_file.close()
     index += 1
+
+#reset index and lets decrypt
+index = 0 
+for index in range(len(targetDir)):
+    print("Decrypting: ", targetDir[index])
+    filePath = os.path.join(dirName, targetDir[index])
+    filePathDec = os.path.join(dirName, targetDir[index]) + '.enc'
+    buffer_size = 65536 
+    input_file = open(filePathDec, 'rb')
+    output = os.path.join(dirName, targetDir[index]) + '.new'
+    output_file = open(output, 'wb')
+    iv = input_file.read(16)
+    key = open('encrypt.key' , 'rb')
+    cur_key = key.read()
+    cipher_encrypt = AES.new(cur_key, AES.MODE_CFB, iv=iv)
+    buffer = input_file.read(buffer_size)
+    while len(buffer) > 0:
+        decrypted_bytes = cipher_encrypt.decrypt(buffer)
+        output_file.write(decrypted_bytes)
+        buffer = input_file.read(buffer_size)
