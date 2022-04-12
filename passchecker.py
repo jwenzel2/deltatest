@@ -26,13 +26,14 @@ if question == '1':
                 word = line.rstrip('\n')
                 if pwstring == word:
                     #found a match!
+                    found = word
                     flag = 1
             fp.close()
         if flag == 0:
             print("Password Not In Wordlist!")
             quit()
         if flag == 1:
-            print("Password Found In Wordlist!")
+            print("Password:", found , "Found In Wordlist!")
             quit()
     else:
         print("try again when you actually have the rockyou.txt wordlist in same directory as this script!")        
