@@ -18,12 +18,14 @@ q. Quit \
 Choose 1 or 2 or q: ")
 
 if question == '1':
+    #if file doesnt exist dont search it
     if os.path.exists('rockyou.txt'):
-        lines = 0
+        #search file for line that matches strinkg
         with open('rockyou.txt', 'r', encoding='ANSI') as fp:
             for line in fp:
                 word = line.rstrip('\n')
                 if pwstring == word:
+                    #found a match!
                     flag = 1
             fp.close()
         if flag == 0:
@@ -37,19 +39,32 @@ if question == '1':
 if question == '2' or 2:
     path = input("Enter path of Wordlist: ")
     if 'rockyou.txt' in path:
-        wordlist = open(path, 'r', encoding='ANSI')
+        with open(path, 'r', encoding='ANSI') as fp:
+            for line in fp:
+                word = line.rstrip('\n')
+                if pwstring == word:
+                    #found a match!
+                    flag = 1
+            fp.close()
+        if flag == 0:
+            print("Password Not In Wordlist!")
+            quit()
+        if flag == 1:
+            print("Password Found In Wordlist!")
+            quit()
     else:
-        wordlist = open(path, 'r')
-    index = 0;
-    flag = 0;
-    for line in wordlist:
-        index += 1
-        if pwstring in line:
-            flag = 1
-    if flag == 0:
-        print("Password Not In Wordlist!")
-    if flag == 1:
-        print("Password Found In Wordlist!")
-        quit()
+        with open(path, 'r') as fp:
+            for line in fp:
+                word = line.rstrip('\n')
+                if pwstring == word:
+                    #found a match!
+                    flag = 1
+            fp.close()
+        if flag == 0:
+            print("Password Not In Wordlist!")
+            quit()
+        if flag == 1:
+            print("Password Found In Wordlist!")
+            quit()
 if question == 'q' or question == 'Q':
     quit()
