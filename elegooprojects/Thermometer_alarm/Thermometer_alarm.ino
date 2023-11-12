@@ -12,7 +12,9 @@ int tempPin = 0;
 int redValue;
 int greenValue;
 int blueValue;
-
+int buttonApin = 22;
+int buttonBpin = 24;
+int buttonCpin = 26;
 #define BLUE 5
 #define GREEN 4
 #define RED 2
@@ -31,6 +33,9 @@ pinMode(BLUE, OUTPUT);
 digitalWrite(RED, HIGH);
 digitalWrite(GREEN, LOW);
 digitalWrite(BLUE, LOW);
+pinMode(buttonApin, INPUT_PULLUP);
+pinMode(buttonBpin, INPUT_PULLUP);
+pinMode(buttonCpin,INPUT_PULLUP);
 }
 
 int ledPin = 2;
@@ -88,14 +93,37 @@ void loop()
     lcd.print("%");
   }
   
- 
-  
+ //test code here
+ if (digitalRead(buttonApin) == LOW)
+ {
+    lcd.setCursor(0, 1);
+    lcd.print("              ");
+    lcd.setCursor(0, 1);
+    lcd.print("button a pressed");
+ }
+
+  if (digitalRead(buttonBpin) == LOW)
+ {
+    lcd.setCursor(0, 1);
+    lcd.print("                  ");
+    lcd.setCursor(0, 1);
+    lcd.print("button b pressed");
+ }
+
+ if (digitalRead(buttonCpin) == LOW)
+ {
+    lcd.setCursor(0, 1);
+    lcd.print("                  ");
+    lcd.setCursor(0, 1);
+    lcd.print("button c pressed");
+ }
 
   // Display Temperature in F
   //lcd.print(tempF+"F Humid:"+humidity);
 
   lcd.setCursor(0,1);
-  lcd.print("              ");
+  delay(1000);
+  lcd.print("                ");
 
   if (tempF < 75)
   {
@@ -119,7 +147,7 @@ void loop()
   {
     tone(3, melody[5], counter);
     lcd.setCursor(0,1);
-    lcd.print("Temp Alarm hit");
+    lcd.print("Temp Alarm hit        ");
     redValue = 255;
     blueValue = 0;
     greenValue = 0;
