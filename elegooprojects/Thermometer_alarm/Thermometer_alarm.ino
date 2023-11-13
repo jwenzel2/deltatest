@@ -12,9 +12,18 @@ int tempPin = 0;
 int redValue;
 int greenValue;
 int blueValue;
-int buttonApin = 22;
-int buttonBpin = 24;
-int buttonCpin = 26;
+int menupin = 22;
+int pluspin = 24;
+int negativepin = 26;
+int okpin = 28;
+int buttonStateMenu = 0; 
+int buttonStatePlus = 0;
+int buttonStateNegative = 0;
+int buttonStateOk = 0;
+int currentScreen = 0;
+const int numOfScreens = 4;
+int parameters[numOfScreens] = {0, 10, 50, 100};
+String screens[numOfScreens][2] = {{"Value_1","Unit_1"}, {"Value_2", "Unit_2"}, {"Value_3","Unit_3"}, {"Value_4","Unit_4"}};
 #define BLUE 5
 #define GREEN 4
 #define RED 2
@@ -28,14 +37,15 @@ void setup()
 {
   lcd.begin(16, 2);
   pinMode(RED, OUTPUT);
-pinMode(GREEN, OUTPUT);
-pinMode(BLUE, OUTPUT);
-digitalWrite(RED, HIGH);
-digitalWrite(GREEN, LOW);
-digitalWrite(BLUE, LOW);
-pinMode(buttonApin, INPUT_PULLUP);
-pinMode(buttonBpin, INPUT_PULLUP);
-pinMode(buttonCpin,INPUT_PULLUP);
+  pinMode(GREEN, OUTPUT);
+  pinMode(BLUE, OUTPUT);
+  digitalWrite(RED, HIGH);
+  digitalWrite(GREEN, LOW);
+  digitalWrite(BLUE, LOW);
+  pinMode(menupin, INPUT_PULLUP);
+  pinMode(pluspin, INPUT_PULLUP);
+  pinMode(negativepin,INPUT_PULLUP);
+  pinMode(okpin,INPUT_PULLUP);
 }
 
 int ledPin = 2;
@@ -59,8 +69,72 @@ static bool measure_environment( float *temperature, float *humidity )
   return( false );
 }
 
+
+void printScreen() {
+  if (currentScreen == 3) {
+    lcd.setCursor(0,0);
+    lcd.print(screens[0][0]);
+    lcd.print(": ");
+    lcd.print(parameters[0]);
+    lcd.print(" ");
+    lcd.print(screens[0][1]);
+
+    lcd.setCursor(0,1);
+    lcd.print(screens[1][0]);
+    lcd.print(": ");
+    lcd.print(parameters[1]);
+    lcd.print(" ");
+    lcd.print(screens[1][1]);
+
+    lcd.setCursor(0,2);
+    lcd.print(screens[2][0]);
+    lcd.print(": ");
+    lcd.print(parameters[2]);
+    lcd.print(" ");
+    lcd.print(screens[2][1]);
+
+    lcd.setCursor(0,3);
+    lcd.print(screens[3][0]);
+    lcd.print(": ");
+    lcd.print(parameters[3]);
+    lcd.print(" ");
+    lcd.print(screens[3][1]);
+  }
+  else {
+    lcd.setCursor(0,0);
+    lcd.print("MENU TOTORIAL");
+    lcd.setCursor(0,2);
+    lcd.print(screens[currentScreen][0]);
+    lcd.setCursor(0,3);
+    //lcd.print(parameters[currentScreen]);
+    lcd.print(" ");
+    lcd.print(screens[currentScreen][1]);
+  }
+}
+
 void loop()
 {
+  /* menu code for future
+    buttonStateMenu = digitalRead(menupin);
+    buttonStatePlus = digitalRead(pluspin);
+    buttonStateNegative= digitalRead(negativepin);
+    buttonStateOk = digitalRead(okpin);
+
+    if(buttonStateMenu == LOW)
+    {
+      lcd.clear();
+      if (currentScreen == 0 )
+      {
+        currentScreen = numOfScreens -1;
+      }
+      else 
+      {
+        currentScreen--;
+      }
+      printScreen();
+    delay(200);
+    }
+  */
   int tempReading = analogRead(tempPin);
   float temperature;
   float humidity;
@@ -70,11 +144,11 @@ void loop()
   tempK = 1 / (0.001129148 + (0.000234125 + (0.0000000876741 * tempK * tempK )) * tempK );       //  Temp Kelvin
   float tempC = tempK - 273.15;            // Convert Kelvin to Celcius
   float tempF = (tempC * 9.0)/ 5.0 + 32.0; // Convert Celcius to Fahrenheit
-  /*  replaced
+    
     float tempVolts = tempReading * 5.0 / 1024.0;
-    float tempC = (tempVolts - 0.5) * 10.0;
-    float tempF = tempC * 9.0 / 5.0 + 32.0;
-  */
+//    float tempC = (tempVolts - 0.5) * 10.0;
+//    float tempF = tempC * 9.0 / 5.0 + 32.0;
+  
 
   // Display Temperature in C
   lcd.setCursor(0, 0);
@@ -92,31 +166,8 @@ void loop()
     lcd.print(humidity, 1);
     lcd.print("%");
   }
-  
- //test code here
- if (digitalRead(buttonApin) == LOW)
- {
-    lcd.setCursor(0, 1);
-    lcd.print("              ");
-    lcd.setCursor(0, 1);
-    lcd.print("button a pressed");
- }
 
-  if (digitalRead(buttonBpin) == LOW)
- {
-    lcd.setCursor(0, 1);
-    lcd.print("                  ");
-    lcd.setCursor(0, 1);
-    lcd.print("button b pressed");
- }
-
- if (digitalRead(buttonCpin) == LOW)
- {
-    lcd.setCursor(0, 1);
-    lcd.print("                  ");
-    lcd.setCursor(0, 1);
-    lcd.print("button c pressed");
- }
+    
 
   // Display Temperature in F
   //lcd.print(tempF+"F Humid:"+humidity);
