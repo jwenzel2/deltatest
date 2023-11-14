@@ -24,6 +24,7 @@ DHT_nonblocking dht_sensor( DHT_SENSOR_PIN, DHT_SENSOR_TYPE );
 // establish temp ranges
 float lowtemp = 75;
 float hightemp = 82;
+bool beep_enabled = true;
 //speaker settings
 int counter = 500;
 int melody[] = {
@@ -193,7 +194,10 @@ if( measure_environment( &temperature, &humidity ) == true )
   }
   if (tempF > hightemp)
   {
-    tone(speaker, melody[5], counter);
+    if (beep_enabled == true)
+    {
+      tone(speaker, melody[5], counter);
+    }
     lcd.setCursor(0,1);
     lcd.print("Temp Alarm hit        ");
     redValue = 255;
@@ -204,5 +208,5 @@ if( measure_environment( &temperature, &humidity ) == true )
     analogWrite(BLUE, blueValue);
    
   }
-  delay(500);
+ // delay(500);
 }
