@@ -12,9 +12,10 @@
 static const int DHT_SENSOR_PIN = 13;
 int speaker = 3;
 int menupin = 18;
-int pluspin = 28;
-int negativepin = 30;
-int okpin = 32;
+int forwardpin = 28;
+int backwardpin = 30;
+int negativepin = 34;
+int positivepin = 32;
 LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
 //variables for the project
 float temperature;
@@ -44,9 +45,9 @@ int prevbuttonStateMenu = 0;
 int prevbuttonStatePlus = 0;
 int prevbuttonStateNegative = 0;
 int prevbuttonStateOk = 0;
-const int numOfScreens = 4;
-int parameters[numOfScreens] = {lowtemp, hightemp,beep_enabled,0};
-String screens[numOfScreens] = {"Low Temp","High Temp","Buzzer",""};
+const int numOfScreens = 3;
+int parameters[numOfScreens] = {lowtemp, hightemp,0};
+String screens[numOfScreens] = {"Low Temp","High Temp","Exiting..."};
 
 
 
@@ -66,10 +67,11 @@ void setup()
   digitalWrite(BLUE, LOW);
   //setup buttons
   pinMode(menupin, INPUT_PULLUP);
-  pinMode(pluspin, INPUT_PULLUP);
+  pinMode(positivepin, INPUT_PULLUP);
   pinMode(negativepin,INPUT_PULLUP);
-  pinMode(okpin,INPUT_PULLUP);
-  prevbuttonStatePlus = digitalRead(pluspin);
+  pinMode(forwardpin,INPUT_PULLUP);
+  pinMode(backwardpin, INPUT_PULLUP);
+  prevbuttonStatePlus = digitalRead(positivepin);
   //setup menu interupt
   attachInterrupt(digitalPinToInterrupt(menupin),printScreen, LOW);
 }
@@ -93,7 +95,7 @@ static bool measure_environment( float *temperature, float *humidity )
 
 //configuration menu in progress
 void printScreen() {
- int currentScreen = 0;
+currentScreen = 0;
 lcd.clear();
 menu_active = true;
 }
@@ -103,18 +105,17 @@ void loop()
 
   while (menu_active == true)
 { 
-  buttonStatePlus = digitalRead(pluspin);
-  if (digitalRead(pluspin) == LOW)
+  if (digitalRead(forwardpin) == LOW)
   {
    
-    if (currentScreen < 5)
+    if (currentScreen < 4)
     {
       currentScreen++;
       delay(500);
     }
     
   }  
-  if (digitalRead(negativepin) == LOW)
+  if (digitalRead(backwardpin) == LOW)
   {
       if (currentScreen > 0)
       {
@@ -122,8 +123,43 @@ void loop()
         delay(500);
       }
   }
-    if (currentScreen == 3) {
+  if (digitalRead(positivepin) == LOW)
+  {
+    int value = parameters[currentScreen];
+    value++;
+    delay(500);
+    if (currentScreen == 0)
+    {
+      lowtemp = value;
+    }
+    if (currentScreen == 1)
+    {
+      hightemp = value;
+    }
+    parameters[currentScreen] = value;
+  }
+  if (digitalRead(negativepin) == LOW)
+  {
+    int value = parameters[currentScreen];
+    value--;
+    delay(500);
+    if (currentScreen == 0)
+    {
+      lowtemp = value;
+    }
+    if (currentScreen == 1)
+    {
+      hightemp = value;
+    }
+    parameters[currentScreen] = value;
+    
+  }
+    if (currentScreen == 2) {
       menu_active = false;
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("RESUMING PROGRAM");
+      delay(500);
       lcd.clear();
     }
     else 
@@ -138,6 +174,20 @@ void loop()
 
  if (menu_active == false)
  {
+
+  if (digitalRead(negativepin == LOW))
+  {
+    if (beep_enabled == false)
+      {
+        beep_enabled == true;
+        delay(500);
+      }
+      if (beep_enabled == true)
+      {
+        beep_enabled == false;
+        delay(500);
+      }
+  }
   lcd.setCursor(0,0);
 // print out a sucessfull measurement on lcd 
 if( measure_environment( &temperature, &humidity ) == true )
