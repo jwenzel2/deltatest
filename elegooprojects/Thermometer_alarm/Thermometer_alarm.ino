@@ -1,5 +1,6 @@
-//www.elegoo.com
-//2016.12.9
+//Title: Thermomitor and Humidity sensor/alarm
+//Author: Jeremiah Wenzel
+
 
 #include <LiquidCrystal.h>
 #include "pitches.h"
