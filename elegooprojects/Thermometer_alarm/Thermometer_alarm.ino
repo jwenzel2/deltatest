@@ -3,14 +3,16 @@
 
 #include <LiquidCrystal.h>
 #include "pitches.h"
-#include <dht_nonblocking.h>
+#include <DHT.h>
 #include "LedControl.h"
 #define DHT_SENSOR_TYPE DHT_TYPE_11
+
 //setup pins
 #define BLUE 11
 #define GREEN 12
 #define RED 13
 static const int DHT_SENSOR_PIN = 4;
+DHT dht11(DHT_SENSOR_PIN, DHT11);
 int speaker = 3;
 int menupin = 18;
 int forwardpin = 28;
@@ -32,7 +34,7 @@ LedControl lc=LedControl(DIN,CLK,CS,1);
 float temperature;
 float humidity;
 float tempF;
-DHT_nonblocking dht_sensor( DHT_SENSOR_PIN, DHT_SENSOR_TYPE );
+//DHT_nonblocking dht_sensor( DHT_SENSOR_PIN, DHT_SENSOR_TYPE );
 // establish temp ranges
 float lowtemp = 75.0;
 float hightemp = 82.0;
@@ -89,28 +91,15 @@ void setup()
   pinMode(forwardpin,INPUT_PULLUP);
   pinMode(backwardpin, INPUT_PULLUP);
   prevbuttonStatePlus = digitalRead(positivepin);
+
+  //initialize dht
+  dht11.begin();
+
   //setup menu interupt
   attachInterrupt(digitalPinToInterrupt(menupin),printScreen, LOW);
 }
-// take a temperature and humidity measurement
-static bool measure_environment( float *temperature, float *humidity )
-{
-  static unsigned long measurement_timestamp = millis( );
 
-  /* Measure once every four seconds. */
-  if( millis( ) - measurement_timestamp > 3000ul )
-  {
-    if( dht_sensor.measure( temperature, humidity ) == true )
-    {
-      measurement_timestamp = millis( );
-      return( true );
-    }
-  }
-
-  return( false );
-}
-
-//configuration menu in progress
+//configuration menu
 void printScreen() {
 currentScreen = 0;
 lcd.clear();
@@ -341,15 +330,15 @@ void loop()
   }
   lcd.setCursor(0,0);
 // print out a sucessfull measurement on lcd 
-if( measure_environment( &temperature, &humidity ) == true )
-  { 
-     tempF = temperature * 9.0 / 5.0 + 32.0;
+delay(1000);
+ tempF = dht11.readTemperature(true);
+ humidity = dht11.readHumidity();
+ //tempF = temperature * 9.0 / 5.0 + 32.0;
     lcd.print("T:");
     lcd.print(tempF);
     lcd.print("F H:");
     lcd.print(humidity, 1);
     lcd.print("%");
-  }
 
 
   lcd.setCursor(0,1);
