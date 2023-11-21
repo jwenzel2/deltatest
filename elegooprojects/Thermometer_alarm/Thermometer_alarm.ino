@@ -38,9 +38,9 @@ float tempF;
 // establish temp ranges
 float lowtemp = 75.0;
 float hightemp = 82.0;
-bool beep_enabled = false;
+bool beep_enabled = true;
 //speaker settings
-int counter = 500;
+int counter = 1000;
 int melody[] = {
   NOTE_C5, NOTE_D5, NOTE_E5, NOTE_F5, NOTE_G5, NOTE_A5, NOTE_B5, NOTE_C6};
 int redValue;
@@ -62,6 +62,7 @@ const int numOfScreens = 3;
 int parameters[numOfScreens] = {lowtemp, hightemp,0};
 String screens[numOfScreens] = {"Low Temp","High Temp","Exiting..."};
 
+int duration = 500;
 
 unsigned long delaytime1=500;
 unsigned long delaytime2=50;
@@ -94,6 +95,7 @@ void setup()
 
   //initialize dht
   dht11.begin();
+ 
 
   //setup menu interupt
   attachInterrupt(digitalPinToInterrupt(menupin),printScreen, LOW);
@@ -102,8 +104,10 @@ void setup()
 //configuration menu
 void printScreen() {
 currentScreen = 0;
+delay(500);
 lcd.clear();
 menu_active = true;
+
 }
 //test function start
 
@@ -312,22 +316,10 @@ void loop()
     }
   }
 
- if (menu_active == false)
+ while (menu_active == false)
  {
 
-  if (digitalRead(negativepin == LOW))
-  {
-    if (beep_enabled == false)
-      {
-        beep_enabled == true;
-        delay(500);
-      }
-      if (beep_enabled == true)
-      {
-        beep_enabled == false;
-        delay(500);
-      }
-  }
+  
   lcd.setCursor(0,0);
 // print out a sucessfull measurement on lcd 
 delay(1000);
@@ -367,11 +359,12 @@ delay(1000);
   }
   if (tempF > hightemp)
   {
+     
+ 
+    // pin8 output the voice, every scale is 0.5 sencond
     if (beep_enabled == true)
     {
-      tone(speaker, melody[5], counter);
-    }
-    lcd.setCursor(0,1);
+       lcd.setCursor(0,1);
     lcd.print("Temp Alarm hit        ");
     redValue = 255;
     blueValue = 0;
@@ -379,7 +372,18 @@ delay(1000);
      analogWrite(RED, redValue);
     analogWrite(GREEN, greenValue);
     analogWrite(BLUE, blueValue);
+       for (int thisNote = 0; thisNote < 8; thisNote++) {
+    // pin8 output the voice, every scale is 0.5 sencond
+    tone(3, melody[thisNote], duration);
+     
+    // Output the voice after several minutes
+    delay(500);
+       }
+       delay(2000);
+  
    
+  }   
   }
  }
 }
+
