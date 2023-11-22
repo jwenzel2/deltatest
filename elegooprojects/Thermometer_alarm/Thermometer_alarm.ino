@@ -35,6 +35,7 @@ LedControl lc=LedControl(DIN,CLK,CS,1);
 float temperature;
 float humidity;
 float tempF;
+int hmatrix;
 //DHT_nonblocking dht_sensor( DHT_SENSOR_PIN, DHT_SENSOR_TYPE );
 // establish temp ranges
 float coldtemp = 70.0;
@@ -221,11 +222,14 @@ void columns() {
  The led will blink along with the row-number.
  row number 4 (index==3) will blink 4 times etc.
  */
-void single() {
+void single(int count) {
+  while(count != 0)
+  {
   for(int row=0;row<8;row++) {
     for(int col=0;col<8;col++) {
       delay(delaytime2);
       lc.setLed(0,row,col,true);
+      count--;
       delay(delaytime2);
       for(int i=0;i<col;i++) {
         lc.setLed(0,row,col,false);
@@ -235,6 +239,8 @@ void single() {
       }
     }
   }
+  }
+  return false;
 }
 //test function end
 void loop()
@@ -326,8 +332,12 @@ void loop()
   lcd.setCursor(0,0);
 // print out a sucessfull measurement on lcd 
   delay(1000);
+  //read temp and humidity
  tempF = dht11.readTemperature(true);
  humidity = dht11.readHumidity();
+ // send humidity data to dot matrix lcd
+ hmatrix = humidity;
+ single(hmatrix);
  //tempF = temperature * 9.0 / 5.0 + 32.0;
     lcd.print("T:");
     lcd.print(tempF);
