@@ -37,11 +37,12 @@ float humidity;
 float tempF;
 //DHT_nonblocking dht_sensor( DHT_SENSOR_PIN, DHT_SENSOR_TYPE );
 // establish temp ranges
+float coldtemp = 70.0;
 float lowtemp = 75.0;
 float hightemp = 82.0;
 bool beep_enabled = false;
 //speaker settings
-int counter = 500;
+int counter = 1000;
 int melody[] = {
   NOTE_C5, NOTE_D5, NOTE_E5, NOTE_F5, NOTE_G5, NOTE_A5, NOTE_B5, NOTE_C6};
 int redValue;
@@ -59,10 +60,11 @@ int prevbuttonStateMenu = 0;
 int prevbuttonStatePlus = 0;
 int prevbuttonStateNegative = 0;
 int prevbuttonStateOk = 0;
-const int numOfScreens = 3;
-int parameters[numOfScreens] = {lowtemp, hightemp,0};
-String screens[numOfScreens] = {"Low Temp","High Temp","Exiting..."};
+const int numOfScreens = 4;
+int parameters[numOfScreens] = {coldtemp,lowtemp, hightemp,0};
+String screens[numOfScreens] = {"coldtemp","Low Temp","High Temp","Exiting..."};
 
+int duration = 500;
 
 unsigned long delaytime1=500;
 unsigned long delaytime2=50;
@@ -95,6 +97,7 @@ void setup()
 
   //initialize dht
   dht11.begin();
+ 
 
   //setup menu interupt
   attachInterrupt(digitalPinToInterrupt(menupin),printScreen, LOW);
@@ -103,8 +106,10 @@ void setup()
 //configuration menu
 void printScreen() {
 currentScreen = 0;
+delay(500);
 lcd.clear();
 menu_active = true;
+
 }
 //test function start
 
@@ -245,93 +250,82 @@ void loop()
 //testcode end
 
   while (menu_active == true)
-{ 
-  if (digitalRead(forwardpin) == LOW)
-  {
-   
-    if (currentScreen < 4)
+  { 
+    if (digitalRead(forwardpin) == LOW)
     {
-      currentScreen++;
-      delay(500);
-    }
+   
+      if (currentScreen < 5)
+      {
+        currentScreen++;
+        delay(500);
+      }
     
-  }  
-  if (digitalRead(backwardpin) == LOW)
-  {
+    }  
+    if (digitalRead(backwardpin) == LOW)
+    {
       if (currentScreen > 0)
       {
         currentScreen--;
         delay(500);
       }
-  }
-  if (digitalRead(positivepin) == LOW)
-  {
-    int value = parameters[currentScreen];
-    value++;
-    delay(500);
-    if (currentScreen == 0)
+    } 
+    if (digitalRead(positivepin) == LOW)
     {
-      lowtemp = value;
-    }
-    if (currentScreen == 1)
-    {
-      hightemp = value;
-    }
-    parameters[currentScreen] = value;
-  }
-  if (digitalRead(negativepin) == LOW)
-  {
-    int value = parameters[currentScreen];
-    value--;
-    delay(500);
-    if (currentScreen == 0)
-    {
-      lowtemp = value;
-    }
-    if (currentScreen == 1)
-    {
-      hightemp = value;
-    }
-    parameters[currentScreen] = value;
-    
-  }
-    if (currentScreen == 2) {
-      menu_active = false;
-      lcd.clear();
-      lcd.setCursor(0,0);
-      lcd.print("RESUMING PROGRAM");
+      int value = parameters[currentScreen];
+      value++;
       delay(500);
-      lcd.clear();
+      if (currentScreen == 0)
+      {
+        lowtemp = value;
+      }
+      if (currentScreen == 1)
+      {
+        hightemp = value;
+      }
+      parameters[currentScreen] = value;
     }
-    else 
+    if (digitalRead(negativepin) == LOW)
     {
-      lcd.setCursor(0,0);
-    lcd.print(screens[currentScreen]);
-    lcd.print(":      ");
-    lcd.setCursor(0,1);
-    lcd.print(parameters[currentScreen]);
+      int value = parameters[currentScreen];
+      value--;
+      delay(500);
+      if (currentScreen == 0)
+      {
+        lowtemp = value;
+      }
+      if (currentScreen == 1)
+      {
+       hightemp = value;
+      }
+      parameters[currentScreen] = value;
+    
     }
+      if (currentScreen == 3) 
+      {
+        menu_active = false;
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("RESUMING PROGRAM");
+        delay(500);
+        lcd.clear();
+      }
+    else 
+      {
+        lcd.setCursor(0,0);
+        lcd.print(screens[currentScreen]);
+        lcd.print(":      ");
+        lcd.setCursor(0,1);
+        lcd.print(parameters[currentScreen]);
+      }
   }
 
- if (menu_active == false)
+ while (menu_active == false)
  {
 
-  if (digitalRead(negativepin == LOW))
-  {
-    if (beep_enabled == false)
-      {
-        beep_enabled == true;
-        delay(500);
-      }
-      if (beep_enabled == true)
-      {
-        beep_enabled == false;
-        delay(500);
-      }
-  }
+  
   lcd.setCursor(0,0);
 // print out a sucessfull measurement on lcd 
-delay(1000);
+  delay(1000);
  tempF = dht11.readTemperature(true);
  humidity = dht11.readHumidity();
  //tempF = temperature * 9.0 / 5.0 + 32.0;
@@ -346,7 +340,7 @@ delay(1000);
   delay(1000);
   lcd.print("                ");
 //change LED and or beep depending on temperature ranges
-  if (tempF < lowtemp)
+  if (tempF <= lowtemp && tempF >= coldtemp)
   {
     greenValue = 255;
     redValue = 0;
@@ -356,7 +350,7 @@ delay(1000);
     analogWrite(BLUE, blueValue);
     
   }
-  if (tempF < hightemp && tempF > lowtemp)
+  if (tempF <= hightemp && tempF >= lowtemp)
   {
     redValue = 255;
     greenValue= 255;
@@ -366,21 +360,59 @@ delay(1000);
     analogWrite(BLUE, blueValue);
     
   }
-  if (tempF > hightemp)
-  {
-    if (beep_enabled == true)
+  if (tempF <= coldtemp)
     {
-      tone(speaker, melody[5], counter);
-    }
-    lcd.setCursor(0,1);
-    lcd.print("Temp Alarm hit        ");
-    redValue = 255;
-    blueValue = 0;
-    greenValue = 0;
-     analogWrite(RED, redValue);
-    analogWrite(GREEN, greenValue);
-    analogWrite(BLUE, blueValue);
-   
-  }
+      lcd.setCursor(0,1);
+      lcd.print("Too Cold!        ");
+      redValue = 0;
+      blueValue = 255;
+      greenValue = 0;
+      analogWrite(RED, redValue);
+      analogWrite(GREEN, greenValue);
+      analogWrite(BLUE, blueValue);
+      if (beep_enabled == true)
+      {      
+        for (int thisNote = 0; thisNote < 8; thisNote++) 
+        {
+          // pin8 output the voice, every scale is 0.5 sencond
+          tone(3, melody[thisNote], duration);
+     
+          // Output the voice after several minutes
+          delay(500);
+        }
+    
+        delay(2000);
+      }
+      if (tempF > hightemp)
+        { 
+     
+          lcd.setCursor(0,1);
+          lcd.print("Temp Alarm hit        ");
+          redValue = 255;
+          blueValue = 0;
+          greenValue = 0;
+          analogWrite(RED, redValue);
+          analogWrite(GREEN, greenValue);
+          analogWrite(BLUE, blueValue);
+          // pin8 output the voice, every scale is 0.5 sencond
+          if (beep_enabled == true)
+          {
+     
+            for (int thisNote = 0; thisNote < 8; thisNote++) 
+            {
+            // pin8 output the voice, every scale is 0.5 sencond
+            tone(3, melody[thisNote], duration);
+     
+            // Output the voice after several minutes
+            delay(500);
+            }
+    
+          delay(2000);
+  
+    
+        }   
+     }
+   }
  }
-}
+} 
+
