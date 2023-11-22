@@ -342,6 +342,10 @@ void loop()
  while (menu_active == false)
  {
 
+  if(digitalRead(backwardpin) == LOW && digitalRead(forwardpin) == LOW)
+  {
+    beep_enabled = !beep_enabled;
+  }
   
   lcd.setCursor(0,0);
 // print out a sucessfull measurement on lcd 
