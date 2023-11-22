@@ -150,16 +150,7 @@ void single(int count) {
 //test function end
 void loop()
 {
-
-//testcode start
-/*
- writeArduinoOnMatrix();
-  rows();
-  columns();
-  single();
-*/
-//testcode end
-
+  //work with the menu when it has been activated
   while (menu_active == true)
   { 
     if (digitalRead(forwardpin) == LOW)
