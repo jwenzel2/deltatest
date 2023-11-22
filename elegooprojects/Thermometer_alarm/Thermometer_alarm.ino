@@ -223,6 +223,19 @@ void columns() {
  row number 4 (index==3) will blink 4 times etc.
  */
 void single(int count) {
+  //initial everything off
+  for(int row=0;row<8;row++) {
+    for(int col=0;col<8;col++) {
+      delay(delaytime2);
+      lc.setLed(0,row,col,false);
+      delay(delaytime2);
+      for(int i=0;i<col;i++) {
+        lc.setLed(0,row,col,false);
+        delay(delaytime2);
+      }
+    }
+  }
+  //now light enough lights to indicate humidyt percentage
   while(count != 0)
   {
   for(int row=0;row<8;row++) {
@@ -233,6 +246,7 @@ void single(int count) {
       delay(delaytime2);
       for(int i=0;i<col;i++) {
         lc.setLed(0,row,col,false);
+         count--;
         delay(delaytime2);
         lc.setLed(0,row,col,true);
         delay(delaytime2);
