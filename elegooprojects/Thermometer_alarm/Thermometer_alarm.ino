@@ -135,17 +135,10 @@ void single(int count) {
       lc.setLed(0,row,col,true);
       count--;
       delay(delaytime2);
-      for(int i=0;i<col;i++) {
-        lc.setLed(0,row,col,false);
-         count--;
-        delay(delaytime2);
-        lc.setLed(0,row,col,true);
-        delay(delaytime2);
-      }
     }
   }
   }
-  return false;
+  return ;
 }
 //test function end
 void loop()
