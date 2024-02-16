@@ -7,10 +7,16 @@
 #include "pitches.h"
 #include <DHT.h>
 #include "LedControl.h"
-#include <SPI.h>
-#include <TFT.h>
+#include <TouchScreen.h>
 
-#define DHT_SENSOR_TYPE DHT_TYPE_11
+#define MINPRESSURE 10
+#define MAXPRESSURE 1000
+#define TS_MINX 120
+#define TS_MAXX 900
+
+#define TS_MINY 70
+#define TS_MAXY 920
+#define DHT_SENSOR_TYPE DHT_TYPE_22
 #define LCD_CS A3 // Chip Select goes to Analog 3
 #define LCD_CD A2 // Command/Data goes to Analog 2
 #define LCD_WR A1 // LCD Write goes to Analog 1
@@ -21,9 +27,12 @@
 #define BLUEL  46
 #define GREENL 45
 #define REDL  44
-
+#define YP A3  // must be an analog pin, use "An" notation!
+#define XM A2  // must be an analog pin, use "An" notation!
+#define YM 9   // can be a digital pin
+#define XP 8   // can be a digital pin
 static const int DHT_SENSOR_PIN = 49;
-DHT dht11(DHT_SENSOR_PIN, DHT11);
+DHT dht22(DHT_SENSOR_PIN, DHT22);
 int speaker = 50;
 //make color selection easy
 #define	BLACK   0x0000
@@ -63,9 +72,9 @@ bool menu_active = false;
 const int numOfScreens = 4;
 int parameters[numOfScreens] = {coldtemp,lowtemp, hightemp,0};
 String screens[numOfScreens] = {"coldtemp","Low Temp","High Temp","Exiting..."};
-
+  Elegoo_GFX_Button buttons[3]; //0,210,75,30
 int duration = 500;
-
+TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 unsigned long delaytime1=500;
 unsigned long delaytime2=50;
 
@@ -75,19 +84,19 @@ void setup()
   pinMode(REDL, OUTPUT);
   pinMode(GREENL, OUTPUT);
   pinMode(BLUEL, OUTPUT);
-  //analogWrite(RED, 255);
+  //Write(RED, 255);
   
-  //digitalWrite(REDL, HIGH);
-  //digitalWrite(GREENL, LOW);
- // digitalWrite(BLUEL, LOW);
+  digitalWrite(REDL, HIGH);
+  digitalWrite(GREENL, LOW);
+  digitalWrite(BLUEL, LOW);
   //setup tft
-  
+   
   tft.setTextColor(GREEN);  
     tft.setTextSize(3);
     Serial.begin(9600);
   Serial.println(F("TFT LCD test"));
   tft.fillScreen(BLACK);
-
+//setup settings button
 #ifdef USE_Elegoo_SHIELD_PINOUT
   Serial.println(F("Using Elegoo 2.4\" TFT Arduino Shield Pinout"));
 #else
@@ -98,49 +107,20 @@ void setup()
 
   //tft.reset();
 
-   uint16_t identifier = tft.readID();
-   if(identifier == 0x9325) {
-    Serial.println(F("Found ILI9325 LCD driver"));
-  } else if(identifier == 0x9328) {
-    Serial.println(F("Found ILI9328 LCD driver"));
-  } else if(identifier == 0x4535) {
-    Serial.println(F("Found LGDP4535 LCD driver"));
-  }else if(identifier == 0x7575) {
-    Serial.println(F("Found HX8347G LCD driver"));
-  } else if(identifier == 0x9341) {
-    Serial.println(F("Found ILI9341 LCD driver"));
-  } else if(identifier == 0x8357) {
-    Serial.println(F("Found HX8357D LCD driver"));
-  } else if(identifier==0x0101)
-  {     
-      identifier=0x9341;
-       Serial.println(F("Found 0x9341 LCD driver"));
-  }
-  else if(identifier==0x1111)
-  {     
-      identifier=0x9328;
-       Serial.println(F("Found 0x9328 LCD driver"));
-  }
-  else {
-    Serial.print(F("Unknown LCD driver chip: "));
-    Serial.println(identifier, HEX);
-    Serial.println(F("If using the Elegoo 2.8\" TFT Arduino shield, the line:"));
-    Serial.println(F("  #define USE_Elegoo_SHIELD_PINOUT"));
-    Serial.println(F("should appear in the library header (Elegoo_TFT.h)."));
-    Serial.println(F("If using the breakout board, it should NOT be #defined!"));
-    Serial.println(F("Also if using the breakout, double-check that all wiring"));
-    Serial.println(F("matches the tutorial."));
-    identifier=0x9328;
-  
-  }
+   uint16_t identifier = 0x9341;
+   
   tft.begin(identifier);
   tft.setRotation(3);
 
-  
+  buttons[1].initButton(&tft,40,220,75,30,BLUE,BLUE,WHITE,"Menu",3);
+  buttons[1].drawButton();
+  tft.setCursor(0,215);
+  tft.setTextColor(WHITE);
+  //tft.print("MENU");
   
   
   //initialize dht
-  dht11.begin();
+  dht22.begin();
 }
 
 //configuration menu
@@ -155,6 +135,32 @@ menu_active = true;
 
 void loop()
 {
+//test code
+ digitalWrite(13, HIGH);
+  TSPoint p = ts.getPoint();
+  digitalWrite(13, LOW);
+ pinMode(XM, OUTPUT);
+  pinMode(YP, OUTPUT);
+  if (p.z > MINPRESSURE && p.z < MAXPRESSURE) {
+    // scale from 0->1023 to tft.width
+    p.x = map(p.y, TS_MINX, TS_MAXX, tft.height(), 0);
+    p.y = (tft.width()-map(p.x, TS_MINY, TS_MAXY, tft.width(), 0));
+   }
+    if (buttons[1].contains(p.y, p.x)) {
+      //Serial.print("Pressing: "); Serial.println(b);
+      buttons[1].press(true); 
+     // tell the button it is pressed
+    } else {
+      buttons[1].press(false);  // tell the button it is NOT pressed
+    }
+  if (buttons[1].justPressed()) {
+        buttons[1].drawButton(true);  // draw invert!
+  }
+   if (buttons[1].justReleased()) {
+      // Serial.print("Released: "); Serial.println(b);
+      buttons[1].drawButton();  // draw normal
+    }
+//end test code
   //work with the menu when it has been activated
   /*needs adaptation to TFT
   while (menu_active == true)
@@ -231,30 +237,31 @@ void loop()
  //{
 
  //tft.fillScreen(BLACK);
+ 
   tft.setCursor(0,0);
 // print out a sucessfull measurement on lcd 
   delay(1000);
   //read temp and humidity
- tempF = dht11.readTemperature(true);
- humidity = dht11.readHumidity();
+ tempF = dht22.readTemperature(true);
+ humidity = dht22.readHumidity();
  // send humidity data to dot matrix lcd
  //tempF = temperature * 9.0 / 5.0 + 32.0;
- 
+ tft.setTextColor(GREEN);
     tft.println("Temperature:");
    // tft.drawRect(rectx,recty,140,25, BLACK);
-    tft.fillRect(rectx,recty,140,25, BLACK);
+    tft.fillRect(0,72,110,25, BLACK);
+  tft.fillRect(rectx,recty,120,26, BLACK);
+    //tft.print(tempF);
     tft.print(tempF);
     tft.println("F");
     tft.println("Humidity:");
   //   tft.drawRect(rectx,recty,140,50, BLACK);
-    tft.fillRect(0,73,140,25, BLACK);
-    tft.print(humidity, 1);
+   
+    tft.print(humidity);
     tft.println("%");
 
 
-  tft.setCursor(0,1);
-  delay(1000);
-  tft.print("                ");
+ 
 //change LED and or beep depending on temperature ranges
   if (tempF <= lowtemp && tempF >= coldtemp)
   {
@@ -299,11 +306,12 @@ void loop()
     
         delay(2000);
       }
+    }
       if (tempF > hightemp)
         { 
      
-          tft.setCursor(0,1);
-          tft.print("Temp Alarm hit        ");
+         // tft.setCursor(40,41);
+         // tft.print("Temp Alarm hit        ");
           redValue = 255;
           blueValue = 0;
           greenValue = 0;
@@ -316,7 +324,7 @@ void loop()
             for (int thisNote = 0; thisNote < 8; thisNote++) 
             {
             // pin8 output the voice, every scale is 0.5 sencond
-            tone(3, melody[thisNote], duration);
+            tone(speaker, melody[thisNote], duration);
      
             // Output the voice after several minutes
             delay(500);
@@ -328,6 +336,6 @@ void loop()
         }   
      }
    }
- }
+ 
 //} 
 
