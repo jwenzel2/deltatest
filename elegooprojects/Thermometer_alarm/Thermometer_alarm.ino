@@ -9,6 +9,7 @@
 #include "LedControl.h"
 #include <TouchScreen.h>
 
+
 #define MINPRESSURE 10
 #define MAXPRESSURE 1000
 #define TS_MINX 120
@@ -45,8 +46,11 @@ int speaker = 50;
 #define WHITE   0xFFFF
 //initialize tft
 Elegoo_TFTLCD tft(LCD_CS, LCD_CD, LCD_WR, LCD_RD, LCD_RESET);
+#define USE_Elegoo_SHIELD_PINOUT
+//Elegoo_TFTLCD tft;
 int rectx = 0;
 int recty= 20;
+
 //variables for the project
 float temperature;
 float humidity;
@@ -56,8 +60,8 @@ int hmatrix;
 // establish temp ranges
 float coldtemp = 70.0;
 float lowtemp = 75.0;
-float hightemp = 82.0;
-bool beep_enabled = false;
+float hightemp = 81.0;
+bool beep_enabled = true;
 int count;
 //speaker settings
 int counter = 1000;
@@ -77,7 +81,13 @@ int duration = 500;
 TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 unsigned long delaytime1=500;
 unsigned long delaytime2=50;
-
+int dht_timer = 5000;
+int beep_timer = 2000;
+int melody_timer = 500;
+unsigned long lastExecutedMillis_1 = 0;
+unsigned long lastExecutedMillis_2 = 0;
+unsigned long lastExecutedMillis_3 = 0;
+int thisNote = 0;
 void setup()
 {
   //setup rgb led
@@ -135,6 +145,9 @@ menu_active = true;
 
 void loop()
 {
+
+  //timers
+  unsigned long currentMillis = millis();
 //test code
  digitalWrite(13, HIGH);
   TSPoint p = ts.getPoint();
@@ -154,7 +167,15 @@ void loop()
       buttons[1].press(false);  // tell the button it is NOT pressed
     }
   if (buttons[1].justPressed()) {
-        buttons[1].drawButton(true);  // draw invert!
+        buttons[1].drawButton(true); 
+        if (beep_enabled = true)
+        {
+          beep_enabled = false;
+        }
+        else if (beep_enabled = false)
+        {
+          beep_enabled = true;
+        } // draw invert!
   }
    if (buttons[1].justReleased()) {
       // Serial.print("Released: "); Serial.println(b);
@@ -240,7 +261,7 @@ void loop()
  
   tft.setCursor(0,0);
 // print out a sucessfull measurement on lcd 
-  delay(1000);
+
   //read temp and humidity
  tempF = dht22.readTemperature(true);
  humidity = dht22.readHumidity();
@@ -248,19 +269,24 @@ void loop()
  //tempF = temperature * 9.0 / 5.0 + 32.0;
  tft.setTextColor(GREEN);
     tft.println("Temperature:");
-   // tft.drawRect(rectx,recty,140,25, BLACK);
+  // tft.drawRect(rectx,recty,140,25, BLACK);
+  if (currentMillis - lastExecutedMillis_1 >= dht_timer)
+  {
+    lastExecutedMillis_1 = currentMillis;
+  
     tft.fillRect(0,72,110,25, BLACK);
   tft.fillRect(rectx,recty,120,26, BLACK);
     //tft.print(tempF);
+   
     tft.print(tempF);
     tft.println("F");
     tft.println("Humidity:");
   //   tft.drawRect(rectx,recty,140,50, BLACK);
-   
+
     tft.print(humidity);
     tft.println("%");
-
-
+  }
+  
  
 //change LED and or beep depending on temperature ranges
   if (tempF <= lowtemp && tempF >= coldtemp)
@@ -294,17 +320,19 @@ void loop()
       analogWrite(GREENL, greenValue);
       analogWrite(BLUEL, blueValue);
       if (beep_enabled == true)
-      {      
+      {   
+        if (currentMillis >= beep_timer)
+        {   
         for (int thisNote = 0; thisNote < 8; thisNote++) 
         {
           // pin8 output the voice, every scale is 0.5 sencond
           tone(3, melody[thisNote], duration);
-     
-          // Output the voice after several minutes
           delay(500);
+          // Output the voice after several minutes
+          
         }
     
-        delay(2000);
+        }
       }
     }
       if (tempF > hightemp)
@@ -320,17 +348,30 @@ void loop()
           analogWrite(BLUEL, blueValue);
           if (beep_enabled == true)
           {
-     
-            for (int thisNote = 0; thisNote < 8; thisNote++) 
+            if (currentMillis - lastExecutedMillis_2 >= beep_timer)
             {
-            // pin8 output the voice, every scale is 0.5 sencond
-            tone(speaker, melody[thisNote], duration);
-     
+              lastExecutedMillis_2 >= currentMillis;
+              // pin8 output the voice, every scale is 0.5 sencond
+           
+           
+            if (currentMillis - lastExecutedMillis_3 >= melody_timer)
+            {
+               lastExecutedMillis_3 = currentMillis;
+             tone(speaker, melody[thisNote], duration);
+            
+             if (thisNote <= 8)
+             {
+              thisNote++;
+             }
+             else if(thisNote = 8)
+             {
+              thisNote = 0;
+             }
             // Output the voice after several minutes
-            delay(500);
             }
+            
     
-          delay(2000);
+          }
   
     
         }   
