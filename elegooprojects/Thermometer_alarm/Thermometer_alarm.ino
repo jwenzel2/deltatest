@@ -16,11 +16,13 @@ RTCDateTime dt;
 
 #define MINPRESSURE 10
 #define MAXPRESSURE 1000
-#define TS_MINX 120
-#define TS_MAXX 900
+//Touch For New ILI9341 TP
+#define TS_LEFT 118
+#define TS_RT 925
 
-#define TS_MINY 70
-#define TS_MAXY 920
+#define TS_TOP 70
+#define TS_BOT 910
+
 #define DHT_SENSOR_TYPE DHT_TYPE_22
 #define LCD_CS A3 // Chip Select goes to Analog 3
 #define LCD_CD A2 // Command/Data goes to Analog 2
@@ -52,13 +54,21 @@ DHT dht22(DHT_SENSOR_PIN, DHT22);
 Elegoo_TFTLCD tft(LCD_CS, LCD_CD, LCD_WR, LCD_RD, LCD_RESET);
 #define USE_Elegoo_SHIELD_PINOUT
 //Elegoo_TFTLCD tft;
+    int rotated_x, rotated_y;
 
-
+#define TS_MINX 118 // (LEFT)
+#define TS_MAXX 925 // (RIGHT)
+#define TS_MINY  70 // (TOP)
+#define TS_MAXY 910 // (BOTTOM)
 //variables for the project
+int16_t px = 0;
+int16_t py = 0;
 float temperature;
 float humidity;
 float tempF;
 int hmatrix;
+int hours;
+int minutes;
 //DHT_nonblocking dht_sensor( DHT_SENSOR_PIN, DHT_SENSOR_TYPE );
 // establish temp ranges
 float coldtemp = 40;
@@ -91,7 +101,7 @@ void setup()
  
  //bool h12 = false;
  //void setClockMode(bool h12);
-//clock.setDateTime(2025, 7, 1, 18, 24, 15);
+//clock.setDateTime(2025, 7, 2, 22, 44, 10);
  // clock.setDateTime(__DATE__, __TIME__);
   //setup rgb led
   pinMode(REDL, OUTPUT);
@@ -109,7 +119,9 @@ void setup()
     Serial.begin(9600);
   Serial.println(F("TFT LCD test")); 
   tft.fillScreen(BLACK);
-  tft.fillRect(0,0,320,240, BLACK);
+  tft.setCursor(0,0);
+
+  
 //setup settings button
 #ifdef USE_Elegoo_SHIELD_PINOUT
   Serial.println(F("Using Elegoo 2.4\" TFT Arduino Shield Pinout"));
@@ -140,6 +152,8 @@ void setup()
   buttons[5].drawButton();
       //setup buttons and labels
       tft.setTextColor(GREEN);
+     
+        
  tft.fillRect(40,205,40,30, BLACK);
     tft.setCursor(41,210);
     tft.print(floor(lowtemp),0);
@@ -172,18 +186,22 @@ dt = clock.getDateTime();
   digitalWrite(13, LOW);
  pinMode(XM, OUTPUT);
   pinMode(YP, OUTPUT);
+
+  
+
   if (p.z > MINPRESSURE && p.z < MAXPRESSURE) 
    {
-     // scale from 0->1023 to tft.width
-      p.x = map(p.y, TS_MINX, TS_MAXX, tft.height(), 0);
-      p.y = (tft.width()-map(p.x, TS_MINY, TS_MAXY, tft.width(), 0));
+  // Map the touch coordinates to the new orientation
+    px = map(p.y, TS_MINY, TS_MAXY, 0, tft.width());
+        py = map(p.x, TS_MINX, TS_MAXX, 0, tft.height());
    }
+
   
  for (uint8_t b=0; b<6; b++) 
   {
-    if (buttons[b].contains(p.x, p.y)) 
+    if (buttons[b].contains(px, py)) 
     {
-      //Serial.print("Pressing: "); Serial.println(b);
+      Serial.print("Pressing: "); Serial.println(b);
       buttons[b].press(true);  // tell the button it is pressed
     } else 
     {
@@ -196,13 +214,25 @@ dt = clock.getDateTime();
     if (buttons[b].justReleased()) 
     {
       
-      hightemp++;
-      tft.fillRect(241,210,40,20, BLACK);
-      tft.setCursor(241,210);
-      tft.print(floor(hightemp),0);
+     Serial.print("Pressing:2 "); Serial.println(b);
+     
     }
    }
-
+for (uint8_t b=0; b<6; b++) {
+    if (buttons[b].justReleased()) {
+       Serial.print("Released: "); Serial.println(b);
+      buttons[b].drawButton();  // draw normal
+    }
+    
+    if (buttons[b].justPressed()) {
+        buttons[b].drawButton(true);  // draw invert!
+        
+        // if a numberpad button, append the relevant # to the textfield
+        
+        
+      delay(100); // UI debouncing
+    }
+  }
 
   tft.setCursor(0,0);
  // print out a sucessfull measurement on lcd 
@@ -227,24 +257,67 @@ dt = clock.getDateTime();
    tft.setCursor(0,55); 
     tft.println("Humidity:");
   
-  tft.fillRect(0,76,120,27, BLACK);
+  tft.fillRect(0,76,120,25, BLACK);
     tft.print(humidity);
     tft.println("%");
     tft.setCursor(0,106);
     tft.println("Date/Time");
-    tft.fillRect(0,130,290,26, BLACK);
+    tft.fillRect(0,130,320,25, BLACK);
     //tft.print(clock.dateFormat("jS M y, h:ia", dt));
     tft.setCursor(0,132);
+     if (dt.month <10)
+    {
+      tft.print("0");
+    }
     tft.print(dt.month);
     tft.print("/");
+     if (dt.day <10)
+    {
+      tft.print("0");
+    }
     tft.print(dt.day);
     tft.print("/");
     tft.print(dt.year);
     tft.print(" ");
-    tft.print(dt.hour);
+    hours = dt.hour;
+    if (hours > 12)
+    {
+      hours = hours - 12;
+      if (hours < 10)
+      {
+        tft.print("0");
+      }
+      tft.print(hours);
+    }
+    else 
+    {
+        if (hours != 0 && hours < 10)
+      {
+        tft.print("0");
+      }
+      if (hours == 0)
+      {
+        tft.print("12");
+      }
+      else
+      {
+      tft.print(dt.hour);
+      }
+    }
     tft.print(":");
+    if (dt.minute <10)
+    {
+      tft.print("0");
+    }
     tft.print(dt.minute);
-    
+    if (dt.hour > 12)
+    {
+      tft.print("P");
+    }
+    else
+    {
+      tft.print("A");
+    }
   }
   
  
