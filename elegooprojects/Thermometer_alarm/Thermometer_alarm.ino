@@ -643,7 +643,7 @@ for (uint8_t b=0; b<7; b++) {
       tft.print("0");
     }
     tft.print(dt.minute);
-    if (dt.hour > 12)
+    if (dt.hour >= 12)
     {
       tft.print("P ");
     }
