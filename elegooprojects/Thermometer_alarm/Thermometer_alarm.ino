@@ -101,6 +101,7 @@ unsigned long lastExecutedMillis_1 = 0;
 unsigned long lastExecutedMillis_2 = 0;
 unsigned long lastExecutedMillis_3 = 0;
 int thisNote = 0;
+bool labelsDrawn = false;
 // --- EEPROM helpers ---
 void saveTempsToEEPROM() {
   EEPROM.put(EEPROM_LOW_ADDR, low_value);
@@ -390,6 +391,7 @@ void redrawMainScreen() {
   // Reset touch coordinates
   px = 0;
   py = 0;
+  labelsDrawn = false;
 }
 
 void setup()
@@ -413,11 +415,10 @@ void setup()
   digitalWrite(BLUEL, LOW);
   //setup tft
    
-  tft.setTextColor(GREEN);  
+  tft.setTextColor(GREEN);
     tft.setTextSize(3);
     Serial.begin(9600);
-  Serial.println(F("TFT LCD test")); 
-  tft.fillScreen(BLACK);
+  Serial.println(F("TFT LCD test"));
   tft.setCursor(0,0);
 
   
@@ -436,6 +437,7 @@ void setup()
    
   tft.begin(identifier);
   tft.setRotation(3);
+  tft.fillScreen(BLACK);
 
   // Load saved temp thresholds from EEPROM
   loadTempsFromEEPROM();
@@ -560,36 +562,41 @@ for (uint8_t b=0; b<7; b++) {
   }
 
   tft.setCursor(0,0);
- // print out a sucessfull measurement on lcd 
+ // print out a sucessfull measurement on lcd
 
   //read temp and humidity
  tempF = dht22.readTemperature(true);
  humidity = dht22.readHumidity();
- // send humidity data to dot matrix lcd
- //tempF = temperature * 9.0 / 5.0 + 32.0;
- tft.setTextSize(3);
- tft.setTextColor(GREEN);
 
-  // tft.drawRect(rectx,recty,140,25, BLACK);
   if (currentMillis - lastExecutedMillis_1 >= dht_timer)
   {
     lastExecutedMillis_1 = currentMillis;
-   tft.println("Temperature:");
-  tft.fillRect(0,29,120,25, BLACK);
-  
+
+   // Draw static labels only once
+   if (!labelsDrawn) {
+     tft.setTextSize(3);
+     tft.setTextColor(GREEN);
+     tft.setCursor(0,0);
+     tft.println("Temperature:");
+     tft.setCursor(0,55);
+     tft.println("Humidity:");
+     tft.setCursor(0,106);
+     tft.println("Date/Time");
+     labelsDrawn = true;
+   }
+
+   // Use overwrite mode (GREEN text on BLACK background) to avoid flicker
+   tft.setTextSize(3);
+   tft.setTextColor(GREEN, BLACK);
+
    tft.setCursor(0,30);
     tft.print(tempF);
-    tft.println("F");
-   tft.setCursor(0,55); 
-    tft.println("Humidity:");
-  
-  tft.fillRect(0,76,120,25, BLACK);
+    tft.println("F  ");
+
+   tft.setCursor(0,79);
     tft.print(humidity);
-    tft.println("%");
-    tft.setCursor(0,106);
-    tft.println("Date/Time");
-    tft.fillRect(0,130,320,25, BLACK);
-    //tft.print(clock.dateFormat("jS M y, h:ia", dt));
+    tft.println("%  ");
+
     tft.setCursor(0,132);
      if (dt.month <10)
     {
@@ -638,11 +645,11 @@ for (uint8_t b=0; b<7; b++) {
     tft.print(dt.minute);
     if (dt.hour > 12)
     {
-      tft.print("P");
+      tft.print("P ");
     }
     else
     {
-      tft.print("A");
+      tft.print("A ");
     }
   }
   
